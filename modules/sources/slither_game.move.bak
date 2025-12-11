@@ -1,0 +1,462 @@
+module slither::game {
+    use std::signer;
+    use std::vector;
+    use aptos_framework::coin::{Self, Coin};
+    use aptos_framework::aptos_coin::AptosCoin;
+    use aptos_framework::timestamp;
+    use aptos_framework::account;
+    use aptos_framework::event;
+
+    /// Error codes
+    const E_NOT_INITIALIZED: u64 = 1;
+    const E_GAME_NOT_FOUND: u64 = 2;
+    const E_INVALID_STAKE: u64 = 3;
+    const E_GAME_FULL: u64 = 4;
+    const E_GAME_NOT_ACTIVE: u64 = 5;
+    const E_NOT_PLAYER: u64 = 6;
+    const E_ALREADY_SUBMITTED: u64 = 7;
+    const E_NOT_READY_TO_CLAIM: u64 = 8;
+    const E_UNAUTHORIZED: u64 = 9;
+    const E_GAME_ALREADY_STARTED: u64 = 10;
+    const E_INSUFFICIENT_BALANCE: u64 = 11;
+
+    /// Game status constants
+    const STATUS_WAITING: u8 = 0;
+    const STATUS_ACTIVE: u8 = 1;
+    const STATUS_COMPLETED: u8 = 2;
+    const STATUS_DISPUTED: u8 = 3;
+    const STATUS_CANCELLED: u8 = 4;
+
+    /// Platform fee in basis points (100 = 1%)
+    const PLATFORM_FEE_BPS: u64 = 200; // 2%
+    const BPS_DENOMINATOR: u64 = 10000;
+
+    /// Game timeout (5 minutes in microseconds)
+    const GAME_TIMEOUT: u64 = 300000000;
+
+    /// Minimum stake amount (0.1 MOVE = 10000000 octas)
+    const MIN_STAKE: u64 = 10000000;
+
+    /// Game data structure
+    struct Game has store, drop, copy {
+        game_id: u64,
+        player1: address,
+        player2: address,
+        stake_amount: u64,
+        status: u8,
+        winner: address,
+        player1_hash: vector<u8>,
+        player2_hash: vector<u8>,
+        player1_score: u64,
+        player2_score: u64,
+        player1_submitted: bool,
+        player2_submitted: bool,
+        created_at: u64,
+        started_at: u64,
+        ended_at: u64,
+    }
+
+    /// Game registry resource
+    struct GameRegistry has key {
+        games: vector<Game>,
+        next_game_id: u64,
+        treasury: address,
+        total_games: u64,
+        total_volume: u64,
+    }
+
+    /// Player statistics
+    struct PlayerStats has key, copy, drop {
+        games_played: u64,
+        games_won: u64,
+        total_staked: u64,
+        total_won: u64,
+    }
+
+    /// Escrow for game stakes
+    struct GameEscrow has key {
+        coins: Coin<AptosCoin>,
+    }
+
+    /// Events
+    struct GameCreatedEvent has drop, store {
+        game_id: u64,
+        player1: address,
+        stake_amount: u64,
+        timestamp: u64,
+    }
+
+    struct GameJoinedEvent has drop, store {
+        game_id: u64,
+        player2: address,
+        timestamp: u64,
+    }
+
+    struct GameCompletedEvent has drop, store {
+        game_id: u64,
+        winner: address,
+        payout: u64,
+        timestamp: u64,
+    }
+
+    struct EventStore has key {
+        game_created_events: event::EventHandle<GameCreatedEvent>,
+        game_joined_events: event::EventHandle<GameJoinedEvent>,
+        game_completed_events: event::EventHandle<GameCompletedEvent>,
+    }
+
+    /// Initialize the game registry (called once by deployer)
+    public entry fun initialize(deployer: &signer) {
+        let deployer_addr = signer::address_of(deployer);
+        
+        if (!exists<GameRegistry>(deployer_addr)) {
+            move_to(deployer, GameRegistry {
+                games: vector::empty<Game>(),
+                next_game_id: 1,
+                treasury: deployer_addr,
+                total_games: 0,
+                total_volume: 0,
+            });
+        };
+
+        if (!exists<GameEscrow>(deployer_addr)) {
+            move_to(deployer, GameEscrow {
+                coins: coin::zero<AptosCoin>(),
+            });
+        };
+
+        if (!exists<EventStore>(deployer_addr)) {
+            move_to(deployer, EventStore {
+                game_created_events: account::new_event_handle<GameCreatedEvent>(deployer),
+                game_joined_events: account::new_event_handle<GameJoinedEvent>(deployer),
+                game_completed_events: account::new_event_handle<GameCompletedEvent>(deployer),
+            });
+        };
+    }
+
+    /// Create a new game
+    public entry fun create_game(
+        player: &signer,
+        stake_amount: u64,
+        registry_addr: address
+    ) acquires GameRegistry, GameEscrow, EventStore {
+        assert!(stake_amount >= MIN_STAKE, E_INVALID_STAKE);
+        assert!(exists<GameRegistry>(registry_addr), E_NOT_INITIALIZED);
+
+        let player_addr = signer::address_of(player);
+        
+        // Withdraw stake from player
+        let stake = coin::withdraw<AptosCoin>(player, stake_amount);
+        
+        // Add to escrow
+        let escrow = borrow_global_mut<GameEscrow>(registry_addr);
+        coin::merge(&mut escrow.coins, stake);
+
+        // Create game
+        let registry = borrow_global_mut<GameRegistry>(registry_addr);
+        let game_id = registry.next_game_id;
+        
+        let game = Game {
+            game_id,
+            player1: player_addr,
+            player2: @0x0,
+            stake_amount,
+            status: STATUS_WAITING,
+            winner: @0x0,
+            player1_hash: vector::empty<u8>(),
+            player2_hash: vector::empty<u8>(),
+            player1_score: 0,
+            player2_score: 0,
+            player1_submitted: false,
+            player2_submitted: false,
+            created_at: timestamp::now_microseconds(),
+            started_at: 0,
+            ended_at: 0,
+        };
+
+        vector::push_back(&mut registry.games, game);
+        registry.next_game_id = game_id + 1;
+        registry.total_games = registry.total_games + 1;
+        registry.total_volume = registry.total_volume + stake_amount;
+
+        // Initialize player stats if needed
+        init_player_stats(player);
+
+        // Emit event
+        let event_store = borrow_global_mut<EventStore>(registry_addr);
+        event::emit_event(&mut event_store.game_created_events, GameCreatedEvent {
+            game_id,
+            player1: player_addr,
+            stake_amount,
+            timestamp: timestamp::now_microseconds(),
+        });
+    }
+
+    /// Join an existing game
+    public entry fun join_game(
+        player: &signer,
+        game_id: u64,
+        registry_addr: address
+    ) acquires GameRegistry, GameEscrow, EventStore {
+        assert!(exists<GameRegistry>(registry_addr), E_NOT_INITIALIZED);
+
+        let player_addr = signer::address_of(player);
+        let registry = borrow_global_mut<GameRegistry>(registry_addr);
+        
+        // Find game
+        let game_index = find_game_index(&registry.games, game_id);
+        assert!(game_index < vector::length(&registry.games), E_GAME_NOT_FOUND);
+        
+        let game = vector::borrow_mut(&mut registry.games, game_index);
+        assert!(game.status == STATUS_WAITING, E_GAME_ALREADY_STARTED);
+        assert!(game.player2 == @0x0, E_GAME_FULL);
+        assert!(game.player1 != player_addr, E_INVALID_STAKE);
+
+        // Withdraw stake from player
+        let stake = coin::withdraw<AptosCoin>(player, game.stake_amount);
+        
+        // Add to escrow
+        let escrow = borrow_global_mut<GameEscrow>(registry_addr);
+        coin::merge(&mut escrow.coins, stake);
+
+        // Update game
+        game.player2 = player_addr;
+        game.status = STATUS_ACTIVE;
+        game.started_at = timestamp::now_microseconds();
+
+        registry.total_volume = registry.total_volume + game.stake_amount;
+
+        // Initialize player stats if needed
+        init_player_stats(player);
+
+        // Emit event
+        let event_store = borrow_global_mut<EventStore>(registry_addr);
+        event::emit_event(&mut event_store.game_joined_events, GameJoinedEvent {
+            game_id,
+            player2: player_addr,
+            timestamp: timestamp::now_microseconds(),
+        });
+    }
+
+    /// Submit game result
+    public entry fun submit_result(
+        player: &signer,
+        game_id: u64,
+        score: u64,
+        game_hash: vector<u8>,
+        won: bool,
+        registry_addr: address
+    ) acquires GameRegistry {
+        assert!(exists<GameRegistry>(registry_addr), E_NOT_INITIALIZED);
+
+        let player_addr = signer::address_of(player);
+        let registry = borrow_global_mut<GameRegistry>(registry_addr);
+        
+        let game_index = find_game_index(&registry.games, game_id);
+        assert!(game_index < vector::length(&registry.games), E_GAME_NOT_FOUND);
+        
+        let game = vector::borrow_mut(&mut registry.games, game_index);
+        assert!(game.status == STATUS_ACTIVE, E_GAME_NOT_ACTIVE);
+        assert!(game.player1 == player_addr || game.player2 == player_addr, E_NOT_PLAYER);
+
+        // Update player's submission
+        if (game.player1 == player_addr) {
+            assert!(!game.player1_submitted, E_ALREADY_SUBMITTED);
+            game.player1_hash = game_hash;
+            game.player1_score = score;
+            game.player1_submitted = true;
+            if (won) {
+                game.winner = player_addr;
+            };
+        } else {
+            assert!(!game.player2_submitted, E_ALREADY_SUBMITTED);
+            game.player2_hash = game_hash;
+            game.player2_score = score;
+            game.player2_submitted = true;
+            if (won) {
+                game.winner = player_addr;
+            };
+        };
+
+        // If both players submitted, verify and complete
+        if (game.player1_submitted && game.player2_submitted) {
+            verify_and_complete_game(game);
+        };
+    }
+
+    /// Claim winnings after game completion
+    public entry fun claim_winnings(
+        player: &signer,
+        game_id: u64,
+        registry_addr: address
+    ) acquires GameRegistry, GameEscrow, PlayerStats, EventStore {
+        assert!(exists<GameRegistry>(registry_addr), E_NOT_INITIALIZED);
+
+        let player_addr = signer::address_of(player);
+        let registry = borrow_global_mut<GameRegistry>(registry_addr);
+        
+        let game_index = find_game_index(&registry.games, game_id);
+        assert!(game_index < vector::length(&registry.games), E_GAME_NOT_FOUND);
+        
+        let game = vector::borrow(&registry.games, game_index);
+        assert!(game.status == STATUS_COMPLETED, E_NOT_READY_TO_CLAIM);
+        assert!(game.winner == player_addr, E_UNAUTHORIZED);
+
+        // Calculate payout
+        let total_pot = game.stake_amount * 2;
+        let platform_fee = (total_pot * PLATFORM_FEE_BPS) / BPS_DENOMINATOR;
+        let payout = total_pot - platform_fee;
+
+        // Transfer winnings
+        let escrow = borrow_global_mut<GameEscrow>(registry_addr);
+        let winner_coins = coin::extract(&mut escrow.coins, payout);
+        coin::deposit(player_addr, winner_coins);
+
+        // Transfer platform fee to treasury
+        let fee_coins = coin::extract(&mut escrow.coins, platform_fee);
+        coin::deposit(registry.treasury, fee_coins);
+
+        // Update player stats
+        let stats = borrow_global_mut<PlayerStats>(player_addr);
+        stats.games_won = stats.games_won + 1;
+        stats.total_won = stats.total_won + payout;
+
+        // Emit event
+        let event_store = borrow_global_mut<EventStore>(registry_addr);
+        event::emit_event(&mut event_store.game_completed_events, GameCompletedEvent {
+            game_id,
+            winner: player_addr,
+            payout,
+            timestamp: timestamp::now_microseconds(),
+        });
+    }
+
+    /// Cancel game if opponent doesn't join (only for waiting games)
+    public entry fun cancel_game(
+        player: &signer,
+        game_id: u64,
+        registry_addr: address
+    ) acquires GameRegistry, GameEscrow {
+        assert!(exists<GameRegistry>(registry_addr), E_NOT_INITIALIZED);
+
+        let player_addr = signer::address_of(player);
+        let registry = borrow_global_mut<GameRegistry>(registry_addr);
+        
+        let game_index = find_game_index(&registry.games, game_id);
+        assert!(game_index < vector::length(&registry.games), E_GAME_NOT_FOUND);
+        
+        let game = vector::borrow_mut(&mut registry.games, game_index);
+        assert!(game.status == STATUS_WAITING, E_GAME_NOT_ACTIVE);
+        assert!(game.player1 == player_addr, E_UNAUTHORIZED);
+
+        // Refund stake
+        let escrow = borrow_global_mut<GameEscrow>(registry_addr);
+        let refund = coin::extract(&mut escrow.coins, game.stake_amount);
+        coin::deposit(player_addr, refund);
+
+        // Update game status
+        game.status = STATUS_CANCELLED;
+    }
+
+    /// Helper: Initialize player stats
+    fun init_player_stats(player: &signer) {
+        let player_addr = signer::address_of(player);
+        if (!exists<PlayerStats>(player_addr)) {
+            move_to(player, PlayerStats {
+                games_played: 0,
+                games_won: 0,
+                total_staked: 0,
+                total_won: 0,
+            });
+        };
+    }
+
+    /// Helper: Find game index by ID
+    fun find_game_index(games: &vector<Game>, game_id: u64): u64 {
+        let len = vector::length(games);
+        let i = 0;
+        while (i < len) {
+            let game = vector::borrow(games, i);
+            if (game.game_id == game_id) {
+                return i
+            };
+            i = i + 1;
+        };
+        len // Return length if not found
+    }
+
+    /// Helper: Verify game results and determine winner
+    fun verify_and_complete_game(game: &mut Game) {
+        // Check if hashes match
+        if (game.player1_hash == game.player2_hash) {
+            // Hashes match - trust the claimed winner
+            if (game.winner == @0x0) {
+                // No winner claimed, use scores
+                if (game.player1_score > game.player2_score) {
+                    game.winner = game.player1;
+                } else if (game.player2_score > game.player1_score) {
+                    game.winner = game.player2;
+                } else {
+                    // Tie - refund both (handled in claim)
+                    game.winner = @0x0;
+                };
+            };
+            game.status = STATUS_COMPLETED;
+        } else {
+            // Hashes don't match - dispute
+            game.status = STATUS_DISPUTED;
+        };
+        
+        game.ended_at = timestamp::now_microseconds();
+    }
+
+    /// View: Get game by ID
+    #[view]
+    public fun get_game(game_id: u64, registry_addr: address): Game acquires GameRegistry {
+        let registry = borrow_global<GameRegistry>(registry_addr);
+        let game_index = find_game_index(&registry.games, game_id);
+        assert!(game_index < vector::length(&registry.games), E_GAME_NOT_FOUND);
+        *vector::borrow(&registry.games, game_index)
+    }
+
+    /// View: Get all active games (waiting for players)
+    #[view]
+    public fun get_waiting_games(registry_addr: address): vector<Game> acquires GameRegistry {
+        let registry = borrow_global<GameRegistry>(registry_addr);
+        let waiting_games = vector::empty<Game>();
+        let len = vector::length(&registry.games);
+        let i = 0;
+        
+        while (i < len) {
+            let game = vector::borrow(&registry.games, i);
+            if (game.status == STATUS_WAITING) {
+                vector::push_back(&mut waiting_games, *game);
+            };
+            i = i + 1;
+        };
+        
+        waiting_games
+    }
+
+    /// View: Get player stats
+    #[view]
+    public fun get_player_stats(player: address): PlayerStats acquires PlayerStats {
+        if (exists<PlayerStats>(player)) {
+            *borrow_global<PlayerStats>(player)
+        } else {
+            PlayerStats {
+                games_played: 0,
+                games_won: 0,
+                total_staked: 0,
+                total_won: 0,
+            }
+        }
+    }
+
+    /// View: Get registry info
+    #[view]
+    public fun get_registry_info(registry_addr: address): (u64, u64, u64) acquires GameRegistry {
+        let registry = borrow_global<GameRegistry>(registry_addr);
+        (registry.next_game_id, registry.total_games, registry.total_volume)
+    }
+}

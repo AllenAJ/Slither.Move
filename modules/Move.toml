@@ -1,0 +1,17 @@
+[package]
+name = "slither"
+version = "1.0.0"
+authors = []
+
+[addresses]
+counter="0xf2fa21daeb741e9ea472603a1f4f0e189c3b9b0907a52128bc4e4218aaddb04b"
+slither="0xf2fa21daeb741e9ea472603a1f4f0e189c3b9b0907a52128bc4e4218aaddb04b"
+
+[dev-addresses]
+
+[dependencies.AptosFramework]
+git = "https://github.com/movementlabsxyz/aptos-core.git"
+rev = "movement"
+subdir = "aptos-move/framework/aptos-framework"
+
+[dev-dependencies]
