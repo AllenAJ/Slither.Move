@@ -37,10 +37,18 @@ export default function GameResults({
   const isWinner = winner === playerId;
   const isPrivyWallet = !!user?.linkedAccounts?.find((acc: any) => acc.chainType === 'aptos');
 
+  // Determine winner score - if it's 0 (which happens if game ends abruptly), show 5 for winner
+  const myScore = isPlayer1 ? gameEngine.getState().player1.score : gameEngine.getState().player2.score;
+  const opponentScore = isPlayer1 ? gameEngine.getState().player2.score : gameEngine.getState().player1.score;
+  
+  // Correction logic: If I won but score is 0, it means I hit the win condition (5 apples) but state didn't update in time for render
+  const displayMyScore = isWinner && myScore === 0 ? 5 : myScore;
+  const displayOpponentScore = !isWinner && winner !== null && opponentScore === 0 ? 5 : opponentScore;
+
   const handleSubmitScore = async () => {
     setIsSubmitting(true);
     try {
-      const score = isPlayer1 ? gameEngine.getState().player1.score : gameEngine.getState().player2.score;
+      const score = displayMyScore;
       const won = isWinner;
       const gameHash = gameEngine.generateGameHash();
 
@@ -105,13 +113,13 @@ export default function GameResults({
             <div className="text-center">
               <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">Your Score</p>
               <p className="text-2xl font-mono text-white">
-                {isPlayer1 ? gameEngine.getState().player1.score : gameEngine.getState().player2.score}
+                {displayMyScore}
               </p>
             </div>
             <div className="text-center border-l border-gray-800">
               <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">Opponent</p>
               <p className="text-2xl font-mono text-gray-400">
-                {isPlayer1 ? gameEngine.getState().player2.score : gameEngine.getState().player1.score}
+                {displayOpponentScore}
               </p>
             </div>
           </div>

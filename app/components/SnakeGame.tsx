@@ -397,39 +397,8 @@ export default function SnakeGame({ gameCreator, isPlayer1, walletAddress, isTwo
   const gameHash = gameEngine?.generateGameHash().slice(0, 8) || '';
 
   return (
-    <div className="min-h-screen flex gap-4 justify-center items-center p-4 bg-black">
-      {/* Player 1 Moves Panel */}
-      <div className="w-64 hidden lg:block">
-        <div 
-          className="bg-black/80 rounded-none p-4 text-white border border-neon-green/30"
-          style={{ boxShadow: '0 0 20px rgba(0, 255, 157, 0.1)' }}
-        >
-          <div className="text-sm mb-2 font-mono uppercase tracking-widest border-b border-gray-800 pb-2">
-            <span style={{ color: '#00FF9D' }}>Player 1</span> {isPlayer1 && '(YOU)'}
-          </div>
-          <div className="text-[10px] text-gray-500 mb-4 font-mono">
-            HASH: {gameHash}
-          </div>
-          <div className="text-xs text-gray-400 mb-2 uppercase tracking-wider">Move Buffer</div>
-          <div className="flex flex-wrap gap-1 mb-4">
-            {player1Inputs.map((input, idx) => (
-              <div
-                key={idx}
-                className="w-6 h-6 flex items-center justify-center font-bold text-[10px] border border-gray-800"
-                style={{
-                  backgroundColor: input.direction === 'UP' || input.direction === 'DOWN' ? 'rgba(0, 255, 157, 0.2)' : 'rgba(255, 170, 0, 0.2)',
-                  color: input.direction === 'UP' || input.direction === 'DOWN' ? '#00FF9D' : '#ffaa00'
-                }}
-              >
-                {input.direction[0]}
-              </div>
-            ))}
-          </div>
-          <div className="mt-2 text-xs text-gray-400 font-mono">
-            LENGTH: {state?.player1.body.length || 3}
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen flex flex-col gap-4 justify-center items-center p-4 bg-black">
+
 
       {/* Center Game Area */}
       <div className="flex flex-col gap-4">
@@ -503,6 +472,63 @@ export default function SnakeGame({ gameCreator, isPlayer1, walletAddress, isTwo
         />
       </div>
 
+        {/* Move History / Hash (Moved below canvas) */}
+        <div className="w-full max-w-4xl grid grid-cols-2 gap-4">
+            {/* Player 1 History */}
+            <div 
+              className="bg-black/80 rounded-none p-2 text-white border border-neon-green/30"
+              style={{ boxShadow: '0 0 10px rgba(0, 255, 157, 0.1)' }}
+            >
+              <div className="flex justify-between items-center mb-2 border-b border-gray-800 pb-1">
+                <div className="text-xs font-mono uppercase tracking-widest">
+                    <span style={{ color: '#00FF9D' }}>P1</span> {isPlayer1 && '(YOU)'}
+                </div>
+                <div className="text-[10px] text-gray-500 font-mono">HASH: {gameHash}</div>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {player1Inputs.slice(-14).map((input, idx) => (
+                  <div
+                    key={idx}
+                    className="w-5 h-5 flex items-center justify-center font-bold text-[8px] border border-gray-800"
+                    style={{
+                      backgroundColor: input.direction === 'UP' || input.direction === 'DOWN' ? 'rgba(0, 255, 157, 0.2)' : 'rgba(255, 170, 0, 0.2)',
+                      color: input.direction === 'UP' || input.direction === 'DOWN' ? '#00FF9D' : '#ffaa00'
+                    }}
+                  >
+                    {input.direction[0]}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Player 2 History */}
+            <div 
+              className="bg-black/80 rounded-none p-2 text-white border border-neon-pink/30"
+              style={{ boxShadow: '0 0 10px rgba(255, 0, 255, 0.1)' }}
+            >
+              <div className="flex justify-between items-center mb-2 border-b border-gray-800 pb-1">
+                <div className="text-xs font-mono uppercase tracking-widest">
+                    <span style={{ color: '#FF00FF' }}>P2</span> {!isPlayer1 && '(YOU)'}
+                </div>
+                <div className="text-[10px] text-gray-500 font-mono">HASH: {gameHash}</div>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {player2Inputs.slice(-14).map((input, idx) => (
+                  <div
+                    key={idx}
+                    className="w-5 h-5 flex items-center justify-center font-bold text-[8px] border border-gray-800"
+                    style={{
+                      backgroundColor: input.direction === 'RIGHT' || input.direction === 'LEFT' ? 'rgba(255, 0, 255, 0.2)' : 'rgba(255, 170, 0, 0.2)',
+                      color: input.direction === 'RIGHT' || input.direction === 'LEFT' ? '#FF00FF' : '#ffaa00'
+                    }}
+                  >
+                    {input.direction[0]}
+                  </div>
+                ))}
+              </div>
+            </div>
+        </div>
+
         {/* Controls */}
         <div className="w-full max-w-4xl text-center">
             <p className="text-xs text-gray-500 uppercase tracking-widest font-mono">
@@ -511,38 +537,7 @@ export default function SnakeGame({ gameCreator, isPlayer1, walletAddress, isTwo
         </div>
       </div>
 
-      {/* Player 2 Moves Panel */}
-      <div className="w-64 hidden lg:block">
-        <div 
-          className="bg-black/80 rounded-none p-4 text-white border border-neon-pink/30"
-          style={{ boxShadow: '0 0 20px rgba(255, 0, 255, 0.1)' }}
-        >
-          <div className="text-sm mb-2 font-mono uppercase tracking-widest border-b border-gray-800 pb-2">
-            <span style={{ color: '#FF00FF' }}>Player 2</span> {!isPlayer1 && '(YOU)'}
-          </div>
-          <div className="text-[10px] text-gray-500 mb-4 font-mono">
-            HASH: {gameHash}
-          </div>
-          <div className="text-xs text-gray-400 mb-2 uppercase tracking-wider">Move Buffer</div>
-          <div className="flex flex-wrap gap-1 mb-4">
-            {player2Inputs.map((input, idx) => (
-              <div
-                key={idx}
-                className="w-6 h-6 flex items-center justify-center font-bold text-[10px] border border-gray-800"
-                style={{
-                  backgroundColor: input.direction === 'RIGHT' || input.direction === 'LEFT' ? 'rgba(255, 0, 255, 0.2)' : 'rgba(255, 170, 0, 0.2)',
-                  color: input.direction === 'RIGHT' || input.direction === 'LEFT' ? '#FF00FF' : '#ffaa00'
-                }}
-              >
-                {input.direction[0]}
-              </div>
-            ))}
-          </div>
-          <div className="mt-2 text-xs text-gray-400 font-mono">
-            LENGTH: {state?.player2.body.length || 3}
-          </div>
-        </div>
-      </div>
+      {/* Player 2 Moves Panel (Removed - now below) */}
     </div>
   );
 }
