@@ -3,12 +3,13 @@
 import { usePrivy } from '@privy-io/react-auth';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { useCreateWallet } from '@privy-io/react-auth/extended-chains';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import LoginPage from './components/LoginPage';
 import GameLobby from './components/GameLobby';
 import SnakeGame from './components/SnakeGame';
 import Toast from './components/Toast';
 import WalletDropdown from './components/WalletDropdown';
+import { getAccountBalance } from './lib/game-transactions';
 
 export default function Home() {
   const { ready, authenticated, user, logout } = usePrivy();
@@ -76,6 +77,26 @@ export default function Home() {
     }
   }, [connected, account]);
 
+  // Fetch balance function
+  const fetchBalance = useCallback(async () => {
+    if (!movementAddress) return;
+    try {
+      const bal = await getAccountBalance(movementAddress);
+      setBalance(bal);
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+    }
+  }, [movementAddress]);
+
+  // Fetch balance on wallet connection and poll every 10 seconds
+  useEffect(() => {
+    if (movementAddress) {
+      fetchBalance();
+      const interval = setInterval(fetchBalance, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [movementAddress, fetchBalance]);
+
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToast({ message, type, isVisible: true });
   };
@@ -109,8 +130,9 @@ export default function Home() {
 
   if (!ready) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#e8f4f8' }}>
-        <div className="text-2xl font-bold">Loading...</div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black gap-4">
+        <div className="w-16 h-16 border-4 border-neon-green border-t-transparent rounded-full animate-spin"></div>
+        <div className="text-neon-green font-mono text-xl animate-pulse">INITIALIZING SYSTEM...</div>
       </div>
     );
   }
@@ -128,7 +150,7 @@ export default function Home() {
       />
 
       {isWalletConnected && movementAddress && (
-        <div className="fixed top-4 right-4 z-50">
+        <div className="fixed top-4 right-4 z-[1000]">
           <WalletDropdown 
             address={movementAddress}
             balance={balance}

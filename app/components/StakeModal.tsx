@@ -54,101 +54,92 @@ export default function StakeModal({ onConfirm, onCancel }: StakeModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4 bg-black bg-opacity-50">
-      <div className="w-full max-w-md bg-white rounded-t-3xl md:rounded-3xl p-6 md:p-8 shadow-2xl">
+    <div className="modal-overlay">
+      <div className="modal-content relative overflow-hidden">
+        {/* Decorative Grid Background */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
+            backgroundImage: 'linear-gradient(rgba(0, 255, 157, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 157, 0.1) 1px, transparent 1px)',
+            backgroundSize: '20px 20px'
+        }}></div>
+
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="relative z-10 flex items-center justify-between mb-8 border-b border-gray-800 pb-4">
           <div>
-            <h2 className="text-3xl font-black text-black">Set Stake</h2>
-            <p className="text-sm text-gray-600 font-semibold mt-1">Choose your wager amount</p>
+            <h2 className="text-2xl font-black text-white uppercase tracking-wider">Set Stake</h2>
+            <p className="text-sm text-gray-500 font-mono mt-1">Select your wager amount</p>
           </div>
           <button
             onClick={onCancel}
-            className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+            className="w-8 h-8 rounded hover:bg-white/10 flex items-center justify-center transition-colors text-gray-500 hover:text-white"
           >
             ✕
           </button>
         </div>
 
         {/* Presets */}
-        <div className="mb-6">
-          <label className="block text-sm font-bold text-black mb-3">Quick Select</label>
+        <div className="relative z-10 mb-8">
+          <label className="block text-xs font-bold mb-3 text-neon-green uppercase tracking-widest">Quick Select</label>
           <div className="grid grid-cols-5 gap-2">
             {presets.map((preset) => (
               <button
                 key={preset.amount}
                 onClick={() => handlePresetClick(preset.amount)}
-                className={`relative py-4 rounded-2xl font-black text-lg transition-all ${
-                  selectedPreset === preset.amount
-                    ? 'bg-green-400 text-black scale-105'
-                    : 'bg-gray-100 text-black hover:bg-gray-200'
-                }`}
+                className={`preset-btn ${selectedPreset === preset.amount ? 'preset-btn-active' : 'preset-btn-inactive'}`}
               >
                 {preset.label}
-                {preset.popular && (
-                  <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-yellow-400 text-black text-[10px] font-black px-2 py-0.5 rounded-full">
-                    POPULAR
-                  </span>
-                )}
+                {preset.popular && <span className="preset-tag">HOT</span>}
               </button>
             ))}
           </div>
         </div>
 
         {/* Custom Amount */}
-        <div className="mb-6">
-          <label className="block text-sm font-bold text-black mb-2">Custom Amount</label>
+        <div className="relative z-10 mb-8">
+          <label className="block text-xs font-bold mb-3 text-neon-green uppercase tracking-widest">Custom Amount</label>
           <div className="relative">
             <input
               type="number"
               value={customAmount}
               onChange={(e) => handleCustomChange(e.target.value)}
-              placeholder="Enter amount"
+              placeholder="0.0"
               step="0.1"
               min="0.1"
-              className={`w-full px-4 py-4 pr-20 rounded-2xl border-2 ${
-                error ? 'border-red-500' : 'border-gray-300'
-              } focus:border-green-400 focus:outline-none font-bold text-lg bg-white`}
+              className={`input pr-16 bg-black text-white border-gray-800 focus:border-neon-green ${error ? 'input-error' : ''}`}
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 font-bold">
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-sm font-mono">
               MOVE
             </span>
           </div>
-          {error && (
-            <p className="text-red-500 text-sm font-bold mt-2">⚠️ {error}</p>
-          )}
+          {error && <p className="text-neon-pink text-xs font-bold mt-2 font-mono uppercase">&gt;&gt; {error}</p>}
         </div>
 
         {/* Summary */}
         {getStakeAmount() > 0 && (
-          <div className="bg-gray-900 rounded-2xl p-4 mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-400 font-semibold text-sm">Your Stake</span>
-              <span className="text-white font-black text-2xl">{getStakeAmount()} MOVE</span>
+          <div className="relative z-10 summary-box mb-8 bg-black/40 border border-neon-green/30">
+            <div className="summary-row mb-2">
+              <span className="summary-label text-gray-400 font-mono uppercase text-xs">Stake</span>
+              <span className="summary-value text-white font-mono">{getStakeAmount()} MOVE</span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-400 font-semibold text-sm">Potential Win</span>
-              <span className="text-green-400 font-black text-2xl">{(getStakeAmount() * 2).toFixed(1)} MOVE</span>
+            <div className="summary-row">
+              <span className="summary-label text-neon-green font-mono uppercase text-xs">Potential Win</span>
+              <span className="summary-value text-neon-green font-mono drop-shadow-[0_0_5px_rgba(0,255,157,0.5)]">
+                {(getStakeAmount() * 2).toFixed(1)} MOVE
+              </span>
             </div>
           </div>
         )}
 
         {/* Buttons */}
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={onCancel}
-            className="bg-gray-100 hover:bg-gray-200 text-black font-bold py-4 px-6 rounded-2xl transition-all"
-            style={{ fontSize: '1.125rem' }}
-          >
-            Cancel
+        <div className="relative z-10 grid grid-cols-2 gap-4">
+          <button onClick={onCancel} className="btn btn-outline text-gray-400 border-gray-600 hover:border-white hover:text-white">
+            Abort
           </button>
           <button
             onClick={handleConfirm}
             disabled={!getStakeAmount() || !!error}
-            className="bg-green-400 hover:bg-green-500 text-black font-bold py-4 px-6 rounded-2xl transition-all disabled:opacity-50"
-            style={{ fontSize: '1.125rem' }}
+            className="btn btn-primary"
           >
-            Confirm
+            Confirm Stake
           </button>
         </div>
       </div>

@@ -1,91 +1,73 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { AlertCircle, CheckCircle, Info, X } from 'lucide-react';
 
 interface ToastProps {
   message: string;
   type: 'success' | 'error' | 'info';
   isVisible: boolean;
   onClose: () => void;
-  duration?: number;
 }
 
-export default function Toast({ message, type, isVisible, onClose, duration = 3000 }: ToastProps) {
-  const [isAnimating, setIsAnimating] = useState(false);
+export default function Toast({ message, type, isVisible, onClose }: ToastProps) {
+  const [show, setShow] = useState(false);
 
   useEffect(() => {
     if (isVisible) {
-      setIsAnimating(true);
+      setShow(true);
       const timer = setTimeout(() => {
-        setIsAnimating(false);
-        setTimeout(onClose, 300); // Wait for animation to complete
-      }, duration);
-
+        handleClose();
+      }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [isVisible, duration, onClose]);
+  }, [isVisible]);
 
-  if (!isVisible && !isAnimating) return null;
-
-  const getToastColor = () => {
-    switch (type) {
-      case 'success':
-        return '#00ff88';
-      case 'error':
-        return '#ff4444';
-      case 'info':
-        return '#0099ff';
-      default:
-        return '#0099ff';
-    }
+  const handleClose = () => {
+    setShow(false);
+    setTimeout(onClose, 300); // Wait for animation
   };
 
-  const getToastIcon = () => {
-    switch (type) {
-      case 'success':
-        return '✅';
-      case 'error':
-        return '❌';
-      case 'info':
-        return 'ℹ️';
-      default:
-        return 'ℹ️';
-    }
+  if (!isVisible && !show) return null;
+
+  const icons = {
+    success: <CheckCircle className="w-5 h-5 text-neon-green" />,
+    error: <AlertCircle className="w-5 h-5 text-neon-pink" />,
+    info: <Info className="w-5 h-5 text-neon-blue" />
+  };
+
+  const borderColors = {
+    success: 'border-neon-green',
+    error: 'border-neon-pink',
+    info: 'border-neon-blue'
+  };
+
+  const bgColors = {
+    success: 'bg-green-900/20',
+    error: 'bg-red-900/20',
+    info: 'bg-blue-900/20'
   };
 
   return (
-    <div
-      className={`fixed top-4 right-4 z-50 transition-all duration-300 ${
-        isAnimating ? 'animate-slide-in-right opacity-100' : 'opacity-0 translate-x-full'
+    <div 
+      className={`fixed top-4 right-4 z-[2000] transition-all duration-300 transform ${
+        show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
       }`}
-      style={{
-        backgroundColor: 'white',
-        border: '3px solid black',
-        boxShadow: '4px 4px 0px black',
-        borderRadius: '12px',
-        padding: '16px 20px',
-        maxWidth: '400px',
-        minWidth: '300px'
-      }}
     >
-      <div className="flex items-center gap-3">
-        <div className="text-2xl">{getToastIcon()}</div>
+      <div className={`
+        flex items-center gap-3 p-4 min-w-[300px] border-l-4 backdrop-blur-md bg-black/90 shadow-[0_0_20px_rgba(0,0,0,0.5)]
+        ${borderColors[type]} 
+      `}>
+        {icons[type]}
         <div className="flex-1">
-          <div 
-            className="font-bold text-lg"
-            style={{ color: getToastColor() }}
-          >
-            {type.charAt(0).toUpperCase() + type.slice(1)}
-          </div>
-          <div className="text-gray-700 text-sm mt-1">
-            {message}
-          </div>
+            <p className="text-sm font-bold text-white uppercase tracking-wider font-mono">{type}</p>
+            <p className="text-xs text-gray-400 font-mono mt-0.5">{message}</p>
         </div>
-        <button
-          onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 font-bold text-xl"
+        <button 
+          onClick={handleClose}
+          className="text-gray-500 hover:text-white transition-colors"
         >
-          ×
+          <X className="w-4 h-4" />
         </button>
       </div>
     </div>

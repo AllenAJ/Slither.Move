@@ -47,11 +47,11 @@ export default function SnakeGame({ gameCreator, isPlayer1, walletAddress, isTwo
         setGameOver(true);
         
         if (authoritativeState.winner === playerId) {
-          onToast('🎉 You won!', 'success');
+          onToast('You won!', 'success');
         } else if (authoritativeState.winner === null) {
-          onToast('🤝 It\'s a tie!', 'info');
+          onToast('It\'s a tie!', 'info');
         } else {
-          onToast('😢 You lost!', 'error');
+          onToast('You lost!', 'error');
         }
       }
     }
@@ -226,11 +226,11 @@ export default function SnakeGame({ gameCreator, isPlayer1, walletAddress, isTwo
         setGameOver(true);
         
         if (winnerNum === playerId) {
-          onToast('🎉 You won!', 'success');
+          onToast('You won!', 'success');
         } else if (winnerNum === null) {
-          onToast('🤝 It\'s a tie!', 'info');
+          onToast('It\'s a tie!', 'info');
         } else {
-          onToast('😢 You lost!', 'error');
+          onToast('You lost!', 'error');
         }
         return;
       }
@@ -266,11 +266,11 @@ export default function SnakeGame({ gameCreator, isPlayer1, walletAddress, isTwo
     apples: any[]
   ) => {
     // Clear canvas
-    ctx.fillStyle = '#e8f4f8';
+    ctx.fillStyle = '#050508'; // Dark background
     ctx.fillRect(0, 0, GRID_WIDTH * CELL_SIZE, GRID_HEIGHT * CELL_SIZE);
 
     // Draw grid
-    ctx.strokeStyle = '#d0e8f0';
+    ctx.strokeStyle = '#1a1a2e';
     ctx.lineWidth = 1;
     for (let x = 0; x <= GRID_WIDTH; x++) {
       ctx.beginPath();
@@ -288,6 +288,8 @@ export default function SnakeGame({ gameCreator, isPlayer1, walletAddress, isTwo
     // Draw apples
     apples.forEach(apple => {
       ctx.fillStyle = '#ff4444';
+      ctx.shadowColor = '#ff4444';
+      ctx.shadowBlur = 15;
       ctx.beginPath();
       ctx.arc(
         apple.x * CELL_SIZE + CELL_SIZE / 2,
@@ -297,6 +299,7 @@ export default function SnakeGame({ gameCreator, isPlayer1, walletAddress, isTwo
         Math.PI * 2
       );
       ctx.fill();
+      ctx.shadowBlur = 0; // Reset shadow
       
       // Apple highlight
       ctx.fillStyle = '#ff8888';
@@ -311,21 +314,25 @@ export default function SnakeGame({ gameCreator, isPlayer1, walletAddress, isTwo
       ctx.fill();
     });
 
-    // Draw player 1 snake (green)
+    // Draw player 1 snake (Neon Green)
     if (player1.alive) {
       player1.body.forEach((segment: any, index: number) => {
-        ctx.fillStyle = index === 0 ? '#00ff88' : '#00cc66';
+        ctx.fillStyle = index === 0 ? '#00FF9D' : '#00cc7d';
+        ctx.shadowColor = '#00FF9D';
+        ctx.shadowBlur = index === 0 ? 15 : 5;
+        
         ctx.fillRect(
           segment.x * CELL_SIZE + 1,
           segment.y * CELL_SIZE + 1,
           CELL_SIZE - 2,
           CELL_SIZE - 2
         );
+        ctx.shadowBlur = 0;
         
         // Draw eyes on head
         if (index === 0) {
           ctx.fillStyle = 'black';
-          const eyeSize = 2;
+          const eyeSize = 3;
           const eyeOffset = 4;
           ctx.fillRect(segment.x * CELL_SIZE + eyeOffset, segment.y * CELL_SIZE + eyeOffset, eyeSize, eyeSize);
           ctx.fillRect(segment.x * CELL_SIZE + CELL_SIZE - eyeOffset - eyeSize, segment.y * CELL_SIZE + eyeOffset, eyeSize, eyeSize);
@@ -333,21 +340,25 @@ export default function SnakeGame({ gameCreator, isPlayer1, walletAddress, isTwo
       });
     }
 
-    // Draw player 2 snake (blue)
+    // Draw player 2 snake (Neon Pink)
     if (player2.alive) {
       player2.body.forEach((segment: any, index: number) => {
-        ctx.fillStyle = index === 0 ? '#0099ff' : '#0077cc';
+        ctx.fillStyle = index === 0 ? '#FF00FF' : '#cc00cc';
+        ctx.shadowColor = '#FF00FF';
+        ctx.shadowBlur = index === 0 ? 15 : 5;
+
         ctx.fillRect(
           segment.x * CELL_SIZE + 1,
           segment.y * CELL_SIZE + 1,
           CELL_SIZE - 2,
           CELL_SIZE - 2
         );
+        ctx.shadowBlur = 0;
         
         // Draw eyes on head
         if (index === 0) {
           ctx.fillStyle = 'black';
-          const eyeSize = 2;
+          const eyeSize = 3;
           const eyeOffset = 4;
           ctx.fillRect(segment.x * CELL_SIZE + eyeOffset, segment.y * CELL_SIZE + eyeOffset, eyeSize, eyeSize);
           ctx.fillRect(segment.x * CELL_SIZE + CELL_SIZE - eyeOffset - eyeSize, segment.y * CELL_SIZE + eyeOffset, eyeSize, eyeSize);
@@ -386,39 +397,36 @@ export default function SnakeGame({ gameCreator, isPlayer1, walletAddress, isTwo
   const gameHash = gameEngine?.generateGameHash().slice(0, 8) || '';
 
   return (
-    <div className="min-h-screen flex gap-4 justify-center items-center p-4" style={{ backgroundColor: '#e8f4f8' }}>
+    <div className="min-h-screen flex gap-4 justify-center items-center p-4 bg-black">
       {/* Player 1 Moves Panel */}
-      <div className="w-64">
+      <div className="w-64 hidden lg:block">
         <div 
-          className="bg-gray-900 rounded-xl p-4 text-white"
-          style={{
-            border: '3px solid black',
-            boxShadow: '3px 3px 0px black'
-          }}
+          className="bg-black/80 rounded-none p-4 text-white border border-neon-green/30"
+          style={{ boxShadow: '0 0 20px rgba(0, 255, 157, 0.1)' }}
         >
-          <div className="text-sm mb-2">
-            <span style={{ color: '#00ff88' }}>Player 1</span> {isPlayer1 && '(You)'}
+          <div className="text-sm mb-2 font-mono uppercase tracking-widest border-b border-gray-800 pb-2">
+            <span style={{ color: '#00FF9D' }}>Player 1</span> {isPlayer1 && '(YOU)'}
           </div>
-          <div className="text-xs text-gray-400 mb-2">
-            Game Hash: {gameHash}
+          <div className="text-[10px] text-gray-500 mb-4 font-mono">
+            HASH: {gameHash}
           </div>
-          <div className="text-xs text-gray-400 mb-2">Moves:</div>
-          <div className="flex flex-wrap gap-1">
+          <div className="text-xs text-gray-400 mb-2 uppercase tracking-wider">Move Buffer</div>
+          <div className="flex flex-wrap gap-1 mb-4">
             {player1Inputs.map((input, idx) => (
               <div
                 key={idx}
-                className="w-8 h-8 flex items-center justify-center font-bold text-xs rounded"
+                className="w-6 h-6 flex items-center justify-center font-bold text-[10px] border border-gray-800"
                 style={{
-                  backgroundColor: input.direction === 'UP' || input.direction === 'DOWN' ? '#00ff88' : '#ffaa00',
-                  color: 'black'
+                  backgroundColor: input.direction === 'UP' || input.direction === 'DOWN' ? 'rgba(0, 255, 157, 0.2)' : 'rgba(255, 170, 0, 0.2)',
+                  color: input.direction === 'UP' || input.direction === 'DOWN' ? '#00FF9D' : '#ffaa00'
                 }}
               >
                 {input.direction[0]}
               </div>
             ))}
           </div>
-          <div className="mt-2 text-xs text-gray-400">
-            Length: {state?.player1.body.length || 3}
+          <div className="mt-2 text-xs text-gray-400 font-mono">
+            LENGTH: {state?.player1.body.length || 3}
           </div>
         </div>
       </div>
@@ -428,127 +436,110 @@ export default function SnakeGame({ gameCreator, isPlayer1, walletAddress, isTwo
         {/* Game Header */}
         <div className="w-full max-w-4xl">
         <div 
-          className="bg-white rounded-xl p-4 flex justify-between items-center"
+          className="bg-black/90 p-4 flex justify-between items-center border-t-2 border-b-2 border-neon-green"
           style={{
-            border: '4px solid black',
-            boxShadow: '4px 4px 0px black'
+            boxShadow: '0 0 20px rgba(0, 255, 157, 0.2)'
           }}
         >
-          <div className="flex gap-6 items-center">
+          <div className="flex gap-8 items-center">
             {/* WebSocket Status */}
             <div className="text-center">
-              <div className="text-xs text-gray-500">Connection</div>
-              <div className="text-sm">
-                {connected ? '🟢' : '🔴'} {opponentConnected ? '🟢' : '⚪'}
+              <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Link</div>
+              <div className="text-sm flex gap-1 justify-center">
+                <span className={`w-2 h-2 ${connected ? 'bg-neon-green shadow-[0_0_5px_#00FF9D]' : 'bg-red-500'}`}></span>
+                <span className={`w-2 h-2 ${opponentConnected ? 'bg-neon-green shadow-[0_0_5px_#00FF9D]' : 'bg-gray-800'}`}></span>
               </div>
             </div>
 
             {/* Player 1 Score */}
             <div className="text-center">
-              <div className="text-sm text-gray-600">Player 1 {isPlayer1 && '(You)'}</div>
-              <div className="text-3xl font-black" style={{ color: '#00ff88' }}>
-                🍎 {state?.player1.score || 0}/5
+              <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">P1 {isPlayer1 && '(YOU)'}</div>
+              <div className="text-2xl font-black font-mono" style={{ color: '#00FF9D', textShadow: '0 0 10px rgba(0,255,157,0.5)' }}>
+                {state?.player1.score || 0}<span className="text-gray-700 text-sm">/5</span>
               </div>
             </div>
 
             {/* Timer */}
-            <div className="text-center">
-              <div className="text-sm text-gray-600">Time</div>
-              <div className={`text-3xl font-black ${timeRemaining <= 10 ? 'text-red-500 animate-pulse' : 'text-gray-800'}`}>
-                ⏱️ {timeRemaining}s
+            <div className="text-center min-w-[80px]">
+              <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Time</div>
+              <div className={`text-3xl font-black font-mono ${timeRemaining <= 10 ? 'text-neon-pink animate-pulse' : 'text-white'}`}>
+                {timeRemaining}
               </div>
             </div>
 
             {/* Player 2 Score */}
             <div className="text-center">
-              <div className="text-sm text-gray-600">Player 2 {!isPlayer1 && '(You)'}</div>
-              <div className="text-3xl font-black" style={{ color: '#0099ff' }}>
-                🍎 {state?.player2.score || 0}/5
+              <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">P2 {!isPlayer1 && '(YOU)'}</div>
+              <div className="text-2xl font-black font-mono" style={{ color: '#FF00FF', textShadow: '0 0 10px rgba(255,0,255,0.5)' }}>
+                {state?.player2.score || 0}<span className="text-gray-700 text-sm">/5</span>
               </div>
             </div>
           </div>
 
           <button
             onClick={onExit}
-            className="font-bold text-white px-4 py-2 rounded-lg transition-opacity hover:opacity-90"
-            style={{
-              backgroundColor: '#ff4444',
-              border: '3px solid black',
-              boxShadow: '3px 3px 0px black'
-            }}
+            className="px-6 py-2 bg-red-900/20 border border-red-500 text-red-500 font-mono text-sm uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
           >
-            🚪 EXIT
+            Abort
           </button>
         </div>
       </div>
 
       {/* Game Canvas */}
       <div 
-        className="bg-white rounded-xl p-4"
-        style={{
-          border: '4px solid black',
-          boxShadow: '6px 6px 0px black'
-        }}
+        className="game-canvas-container relative"
       >
+        {/* CRT Scanline Effect Overlay */}
+        <div className="absolute inset-0 pointer-events-none opacity-10" style={{
+            background: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))',
+            backgroundSize: '100% 2px, 3px 100%'
+        }}></div>
+        
         <canvas
           ref={canvasRef}
           width={GRID_WIDTH * CELL_SIZE}
           height={GRID_HEIGHT * CELL_SIZE}
-          style={{
-            border: '2px solid black',
-            borderRadius: '8px'
-          }}
+          className="block"
         />
       </div>
 
         {/* Controls */}
-        <div className="w-full max-w-4xl">
-          <div 
-            className="bg-white rounded-xl p-4 text-center"
-            style={{
-              border: '4px solid black',
-              boxShadow: '4px 4px 0px black'
-            }}
-          >
-            <p className="text-sm text-gray-600">
-              <strong>Controls:</strong> Arrow Keys or WASD to move • Eat 5 apples or cut off opponent to win!
+        <div className="w-full max-w-4xl text-center">
+            <p className="text-xs text-gray-500 uppercase tracking-widest font-mono">
+              <span className="text-neon-green">WASD / ARROWS</span> to Navigate • <span className="text-neon-pink">COLLISION</span> = TERMINATION
             </p>
-          </div>
         </div>
       </div>
 
       {/* Player 2 Moves Panel */}
-      <div className="w-64">
+      <div className="w-64 hidden lg:block">
         <div 
-          className="bg-gray-900 rounded-xl p-4 text-white"
-          style={{
-            border: '3px solid black',
-            boxShadow: '3px 3px 0px black'
-          }}
+          className="bg-black/80 rounded-none p-4 text-white border border-neon-pink/30"
+          style={{ boxShadow: '0 0 20px rgba(255, 0, 255, 0.1)' }}
         >
-          <div className="text-sm mb-2">
-            <span style={{ color: '#0099ff' }}>Player 2</span> {!isPlayer1 && '(You)'}
+          <div className="text-sm mb-2 font-mono uppercase tracking-widest border-b border-gray-800 pb-2">
+            <span style={{ color: '#FF00FF' }}>Player 2</span> {!isPlayer1 && '(YOU)'}
           </div>
-          <div className="text-xs text-gray-400 mb-2">
-            Game Hash: {gameHash}
+          <div className="text-[10px] text-gray-500 mb-4 font-mono">
+            HASH: {gameHash}
           </div>
-          <div className="text-xs text-gray-400 mb-2">Moves:</div>
-          <div className="flex flex-wrap gap-1">
+          <div className="text-xs text-gray-400 mb-2 uppercase tracking-wider">Move Buffer</div>
+          <div className="flex flex-wrap gap-1 mb-4">
             {player2Inputs.map((input, idx) => (
               <div
                 key={idx}
-                className="w-8 h-8 flex items-center justify-center font-bold text-xs rounded"
+                className="w-6 h-6 flex items-center justify-center font-bold text-[10px] border border-gray-800"
                 style={{
-                  backgroundColor: input.direction === 'RIGHT' || input.direction === 'LEFT' ? '#0099ff' : '#ff00ff',
-                  color: 'white'
+                  backgroundColor: input.direction === 'RIGHT' || input.direction === 'LEFT' ? 'rgba(255, 0, 255, 0.2)' : 'rgba(255, 170, 0, 0.2)',
+                  color: input.direction === 'RIGHT' || input.direction === 'LEFT' ? '#FF00FF' : '#ffaa00'
                 }}
               >
                 {input.direction[0]}
               </div>
             ))}
           </div>
-          <div className="mt-2 text-xs text-gray-400">
-            Length: {state?.player2.body.length || 3}
+          <div className="mt-2 text-xs text-gray-400 font-mono">
+            LENGTH: {state?.player2.body.length || 3}
           </div>
         </div>
       </div>

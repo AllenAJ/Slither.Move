@@ -1,21 +1,23 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Press_Start_2P, Share_Tech_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const pressStart = Press_Start_2P({
+  weight: "400",
+  variable: "--font-press-start",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const shareTechMono = Share_Tech_Mono({
+  weight: "400",
+  variable: "--font-share-tech",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Counter Game",
-  description: "Increment or decrement your counter and level up!",
+  title: "SlitherMoney - Crypto Snake Battle",
+  description: "Stake tokens, battle opponents, win the pot!",
 };
 
 export default function RootLayout({
@@ -26,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${pressStart.variable} ${shareTechMono.variable} antialiased bg-gray-900 text-white`}
       >
         <Providers>{children}</Providers>
       </body>

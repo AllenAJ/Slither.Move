@@ -10,6 +10,28 @@ import { SignRawHashFunction } from './transactions';
 // Game contract address - deployed on Movement testnet
 export const GAME_CONTRACT_ADDRESS = '0xf2fa21daeb741e9ea472603a1f4f0e189c3b9b0907a52128bc4e4218aaddb04b';
 
+/**
+ * Get account balance in MOVE (converts from octas)
+ */
+export const getAccountBalance = async (address: string): Promise<number> => {
+  try {
+    const resources = await aptos.getAccountResources({ accountAddress: address });
+    const coinStore = resources.find(
+      (r) => r.type === '0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>'
+    );
+    
+    if (coinStore && coinStore.data) {
+      const balanceInOctas = (coinStore.data as any).coin?.value || 0;
+      // Convert octas to MOVE (1 MOVE = 100,000,000 octas)
+      return Number(balanceInOctas) / 100000000;
+    }
+    return 0;
+  } catch (error) {
+    console.error('Error fetching balance:', error);
+    return 0;
+  }
+};
+
 // Use V2 contract with proper escrow
 const GAME_MODULE = 'game_v2';
 
@@ -263,6 +285,44 @@ export const submitGameResult = async (
 };
 
 /**
+ * Submit game result with native wallet
+ */
+export const submitGameResultNative = async (
+  gameCreator: string,
+  score: number,
+  gameHash: string,
+  won: boolean,
+  walletAddress: string,
+  signAndSubmitTransaction: any
+): Promise<string> => {
+  try {
+    console.log('[Submit Result Native] Starting transaction:', { gameCreator, score, won });
+
+    const response = await signAndSubmitTransaction({
+      sender: walletAddress,
+      data: {
+        function: `${GAME_CONTRACT_ADDRESS}::${GAME_MODULE}::submit_result`,
+        functionArguments: [gameCreator, score, won],
+      },
+    });
+
+    const executed = await aptos.waitForTransaction({
+      transactionHash: response.hash,
+    });
+
+    if (!executed.success) {
+      throw new Error('Transaction failed');
+    }
+
+    console.log('[Submit Result Native] Transaction confirmed');
+    return response.hash;
+  } catch (error) {
+    console.error('Error submitting result with native wallet:', error);
+    throw error;
+  }
+};
+
+/**
  * Claim winnings (V2: winner can claim directly!)
  */
 export const claimWinnings = async (
@@ -285,7 +345,7 @@ export const claimWinnings = async (
 
     const message = generateSigningMessageForTransaction(rawTxn);
     const { signature: rawSignature } = await signRawHash({
-      address: walletAddress, // Fixed: use walletAddress instead of gameCreator
+      address: walletAddress,
       chainType: 'aptos',
       hash: `0x${toHex(message)}`,
     });

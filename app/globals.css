@@ -1,8 +1,402 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+:root {
+  /* Cyberpunk Palette */
+  --neon-green: #00FF9D;
+  --neon-pink: #FF00FF;
+  --neon-blue: #00F0FF;
+  --neon-yellow: #FAFF00;
+  
+  --bg-dark: #0a0a12;
+  --bg-card: #151520;
+  --bg-input: #050508;
+  
+  --text-main: #FFFFFF;
+  --text-dim: #A0A0B0;
+  
+  --border-glow: 0 0 10px rgba(0, 255, 157, 0.5);
+  --border-glow-pink: 0 0 10px rgba(255, 0, 255, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+}
 
 body {
-  background-color: #F5F5F2;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: var(--bg-dark);
+  font-family: var(--font-share-tech), monospace;
+  color: var(--text-main);
+  background-image: 
+    linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 157, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center top;
+  min-height: 100vh;
+}
+
+/* Typography Overrides */
+h1, h2, h3, .font-arcade {
+  font-family: var(--font-press-start), cursive;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Gradient Background Utility - Overriding the old one */
+.bg-gradient-main {
+  background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0a0a12 100%);
+}
+
+/* Cards */
+.card {
+  background-color: rgba(21, 21, 32, 0.9);
+  border: 1px solid #333;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  border-radius: 4px; /* Sharper corners */
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Add a cool top border to cards */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--neon-pink), var(--neon-blue), var(--neon-green));
+}
+
+.card-dark {
+  background-color: #000;
+  border: 1px solid #333;
+  padding: 24px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 24px;
+  font-family: var(--font-press-start), cursive;
+  font-size: 12px;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  width: 100%;
+  text-transform: uppercase;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  position: relative;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(100%);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(2px);
+}
+
+.btn-primary {
+  background: linear-gradient(90deg, var(--neon-green), #00cc7d);
+  color: #000;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 0 15px var(--neon-green);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: linear-gradient(90deg, var(--neon-blue), #00a0cc);
+  color: #000;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  box-shadow: 0 0 15px var(--neon-blue);
+  transform: translateY(-2px);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--neon-green);
+  color: var(--neon-green);
+  clip-path: none; /* Borders don't play well with clip-path sometimes */
+  border-radius: 4px;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: rgba(0, 255, 157, 0.1);
+  box-shadow: 0 0 10px var(--neon-green);
+}
+
+.btn-danger {
+  background: linear-gradient(90deg, #ff4f4f, #cc0000);
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  box-shadow: 0 0 15px #ff4f4f;
+}
+
+/* Inputs */
+.input {
+  width: 100%;
+  padding: 16px;
+  background-color: var(--bg-input);
+  border: 1px solid #444;
+  color: var(--neon-green);
+  font-family: var(--font-share-tech), monospace;
+  font-size: 16px;
+  border-radius: 0;
+  transition: all 0.3s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--neon-green);
+  box-shadow: 0 0 10px rgba(0, 255, 157, 0.2);
+}
+
+.input::placeholder {
+  color: #555;
+}
+
+.input-error {
+  border-color: var(--neon-pink);
+  box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);
+}
+
+/* Status Indicators */
+.status-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #333;
+  box-shadow: 0 0 5px currentColor;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.status-dot-green {
+  background-color: var(--neon-green);
+  box-shadow: 0 0 10px var(--neon-green);
+  animation: pulse-glow 2s infinite;
+}
+
+.status-dot-red {
+  background-color: var(--neon-pink);
+  box-shadow: 0 0 10px var(--neon-pink);
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 5px var(--neon-green); opacity: 1; }
+  50% { box-shadow: 0 0 20px var(--neon-green); opacity: 0.8; }
+  100% { box-shadow: 0 0 5px var(--neon-green); opacity: 1; }
+}
+
+/* Spinner */
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid transparent;
+  border-top-color: var(--neon-green);
+  border-right-color: var(--neon-blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Alerts */
+.alert {
+  padding: 16px;
+  margin-bottom: 24px;
+  border-left: 4px solid transparent;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.alert-warning {
+  border-color: var(--neon-yellow);
+  background: rgba(250, 255, 0, 0.05);
+  color: var(--neon-yellow);
+}
+
+.alert-error {
+  border-color: var(--neon-pink);
+  background: rgba(255, 0, 255, 0.05);
+  color: var(--neon-pink);
+}
+
+.alert-success {
+  border-color: var(--neon-green);
+  background: rgba(0, 255, 157, 0.05);
+  color: var(--neon-green);
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid #444;
+  background: #111;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Toast */
+.toast {
+  background: #1a1a2e;
+  border: 1px solid var(--neon-blue);
+  color: white;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+  border-radius: 0;
+  font-family: var(--font-share-tech);
+}
+
+.toast-success { border-color: var(--neon-green); }
+.toast-error { border-color: var(--neon-pink); }
+.toast-info { border-color: var(--neon-blue); }
+
+/* Game Specifics */
+.game-canvas-container {
+  background-color: #000;
+  border: 2px solid #333;
+  padding: 4px;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+}
+
+.game-hud {
+  background: rgba(0, 0, 0, 0.8);
+  border-bottom: 2px solid #333;
+  font-family: var(--font-press-start);
+  font-size: 12px;
+}
+
+.timer {
+  font-family: var(--font-share-tech);
+  font-size: 42px;
+  text-shadow: 0 0 10px currentColor;
+}
+
+.timer-warning {
+  color: var(--neon-pink);
+  animation: flash 0.5s infinite;
+}
+
+@keyframes flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Dropdown */
+.dropdown-trigger {
+  background: #000;
+  border: 1px solid var(--neon-green);
+  color: var(--neon-green);
+  border-radius: 0;
+  font-family: var(--font-share-tech);
+  text-transform: uppercase;
+}
+
+.dropdown-trigger:hover {
+  background: rgba(0, 255, 157, 0.1);
+}
+
+.dropdown-menu {
+  background: #000;
+  border: 1px solid var(--neon-green);
+  border-radius: 0;
+  box-shadow: 0 0 20px rgba(0, 255, 157, 0.2);
+}
+
+.dropdown-item {
+  color: white;
+  font-family: var(--font-share-tech);
+}
+
+.dropdown-item:hover {
+  background: var(--neon-green);
+  color: black;
+}
+
+.dropdown-item-danger {
+  color: var(--neon-pink);
+}
+
+.dropdown-item-danger:hover {
+  background: var(--neon-pink);
+  color: black;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 2000;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 480px;
+  background-color: #1a1a2e;
+  border: 2px solid var(--neon-green);
+  box-shadow: 0 0 30px rgba(0, 255, 157, 0.3);
+  border-radius: 0;
+  padding: 24px;
+  animation: modal-pop 0.3s ease-out;
+}
+
+@keyframes modal-pop {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Preset Buttons in Modal */
+.preset-btn {
+  background: #111;
+  border: 1px solid #333;
+  color: #888;
+  font-family: var(--font-share-tech);
+  border-radius: 0;
+}
+
+.preset-btn:hover {
+  border-color: var(--neon-green);
+  color: white;
+}
+
+.preset-btn-active {
+  background: rgba(0, 255, 157, 0.1);
+  border-color: var(--neon-green);
+  color: var(--neon-green);
+  box-shadow: 0 0 10px rgba(0, 255, 157, 0.2);
+  transform: none; /* remove scale */
+}
+
+.preset-tag {
+  background: var(--neon-pink);
+  color: black;
+  font-family: var(--font-press-start);
+  font-size: 8px;
+  border-radius: 0;
+  padding: 4px 6px;
 }

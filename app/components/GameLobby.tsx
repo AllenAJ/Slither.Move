@@ -6,6 +6,7 @@ import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { useSignRawHash } from '@privy-io/react-auth/extended-chains';
 import { createGame, createGameNative, joinGame, joinGameNative, getGame } from '../lib/game-transactions';
 import StakeModal from './StakeModal';
+import { Clipboard, User } from 'lucide-react';
 
 interface GameLobbyProps {
   walletAddress: string;
@@ -111,109 +112,146 @@ export default function GameLobby({ walletAddress, onGameStart, onToast }: GameL
     }
   };
 
+  const copyAddress = () => {
+    navigator.clipboard.writeText(walletAddress);
+    onToast('Address copied!', 'info');
+  };
+
   return (
-    <div className="min-h-screen p-4 md:p-8" style={{ background: 'linear-gradient(135deg, #F5F5F2 0%, #E5E5E0 100%)' }}>
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-black text-black mb-2">Game Lobby</h1>
-          <p className="text-gray-600 font-semibold">Create or join a snake battle</p>
+    <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
+      <div className="w-full max-w-6xl">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-6xl mb-4 text-neon-green drop-shadow-[0_0_10px_rgba(0,255,157,0.5)]">
+            Battle<span className="text-white">Zone</span>
+          </h1>
+          <p className="text-gray-400 font-mono text-sm tracking-widest uppercase">Select your protocol</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
           {/* Create Game */}
-          <div className="bg-white rounded-3xl p-6 shadow-xl border-2 border-gray-900">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-2xl">⚔️</div>
+          <div className="card group hover:border-neon-green transition-colors duration-300">
+            <div className="flex items-center justify-between mb-8 border-b border-gray-800 pb-4">
               <div>
-                <h2 className="text-2xl font-black text-black">Create Game</h2>
-                <p className="text-sm text-gray-600 font-semibold">Start a new battle</p>
+                <h2 className="text-2xl text-white mb-1">Host Game</h2>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">Initialize Battle</p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-neon-green/10 flex items-center justify-center text-neon-green">
+                <span className="text-2xl">+</span>
               </div>
             </div>
 
             {!waitingForOpponent ? (
-              <button
-                onClick={() => setShowStakeModal(true)}
-                disabled={isCreating}
-                className="w-full bg-green-400 hover:bg-green-500 text-black font-bold py-4 px-6 rounded-2xl transition-all disabled:opacity-50"
-                style={{ fontSize: '1.125rem' }}
-              >
-                {isCreating ? 'Creating...' : 'Create Game'}
-              </button>
+              <div className="space-y-6">
+                <p className="text-gray-400 text-sm leading-relaxed">
+                  Create a new game lobby and wait for an opponent. You will set the stake amount.
+                </p>
+                <button
+                  onClick={() => setShowStakeModal(true)}
+                  disabled={isCreating}
+                  className="btn btn-primary"
+                >
+                  {isCreating ? 'Initializing...' : 'Create Lobby'}
+                </button>
+              </div>
             ) : (
-              <div className="bg-yellow-100 border-2 border-yellow-400 rounded-2xl p-6 text-center">
-                <div className="w-6 h-6 border-4 border-gray-300 border-t-green-400 rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="font-black text-black text-lg mb-2">Waiting for opponent...</p>
-                <div className="bg-white rounded-xl p-3 mb-3">
-                  <p className="text-xs text-gray-600 font-bold mb-1">Your Address</p>
-                  <p className="font-mono text-sm text-black break-all">{walletAddress}</p>
+              <div className="alert alert-warning text-center animate-pulse">
+                <div className="spinner mx-auto mb-4 border-t-neon-yellow"></div>
+                <p className="font-bold text-lg mb-2 text-neon-yellow">Awaiting Challenger...</p>
+                <p className="text-sm text-gray-400 mb-6">Share your coordinates:</p>
+                
+                <div 
+                  className="bg-black/50 border border-neon-yellow/30 rounded p-4 mb-4 cursor-pointer hover:bg-neon-yellow/10 transition-colors group/copy relative"
+                  onClick={copyAddress}
+                >
+                  <p className="text-[10px] text-gray-500 font-bold mb-1 uppercase tracking-widest">Target ID</p>
+                  <div className="flex items-center justify-between gap-2">
+                     <p className="font-mono text-sm break-all text-neon-yellow">{walletAddress}</p>
+                     <Clipboard className="w-4 h-4 text-gray-500 group-hover/copy:text-neon-yellow" />
+                  </div>
                 </div>
-                <div className="bg-white rounded-xl p-3">
-                  <p className="text-xs text-gray-600 font-bold mb-1">Stake Amount</p>
-                  <p className="font-black text-2xl text-yellow-600">{myStake} MOVE</p>
+                
+                <div className="flex items-center justify-between bg-black/30 p-3 rounded border border-gray-800">
+                  <span className="text-xs text-gray-500 font-bold uppercase">Stake</span>
+                  <span className="font-mono text-xl text-neon-green">{myStake} MOVE</span>
                 </div>
               </div>
             )}
           </div>
 
           {/* Join Game */}
-          <div className="bg-white rounded-3xl p-6 shadow-xl border-2 border-gray-900">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-2xl">🎯</div>
+          <div className="card group hover:border-neon-pink transition-colors duration-300">
+            <div className="flex items-center justify-between mb-8 border-b border-gray-800 pb-4">
               <div>
-                <h2 className="text-2xl font-black text-black">Join Game</h2>
-                <p className="text-sm text-gray-600 font-semibold">Enter opponent's address</p>
+                <h2 className="text-2xl text-white mb-1">Join Game</h2>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">Infiltrate Lobby</p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-neon-pink/10 flex items-center justify-center text-neon-pink">
+                <span className="text-2xl">→</span>
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-bold text-black mb-2">Opponent Address</label>
-                <input
-                  type="text"
-                  value={joinAddress}
-                  onChange={(e) => setJoinAddress(e.target.value)}
-                  placeholder="0x..."
-                  className="w-full px-4 py-4 rounded-2xl border-2 border-gray-300 focus:border-blue-400 focus:outline-none font-mono text-sm bg-white"
-                  disabled={isJoining}
-                />
+                <label className="block text-xs font-bold mb-2 text-gray-500 uppercase tracking-widest">Target Address</label>
+                <div className="relative">
+                    <input
+                    type="text"
+                    value={joinAddress}
+                    onChange={(e) => setJoinAddress(e.target.value)}
+                    placeholder="0x..."
+                    className={`input pl-10 ${joinAddress && joinAddress.toLowerCase() === walletAddress.toLowerCase() ? 'input-error' : ''}`}
+                    disabled={isJoining}
+                    />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                </div>
                 {joinAddress && joinAddress.toLowerCase() === walletAddress.toLowerCase() && (
-                  <p className="text-red-500 text-sm font-bold mt-2">⚠️ You can't join your own game!</p>
+                  <p className="text-neon-pink text-xs font-bold mt-2 uppercase">Cannot target self</p>
                 )}
               </div>
 
               <button
                 onClick={handleJoinGame}
                 disabled={isJoining || !joinAddress.trim() || joinAddress.toLowerCase() === walletAddress.toLowerCase()}
-                className="w-full bg-blue-400 hover:bg-blue-500 text-black font-bold py-4 px-6 rounded-2xl transition-all disabled:opacity-50"
-                style={{ fontSize: '1.125rem' }}
+                className="btn btn-secondary"
               >
-                {isJoining ? 'Joining...' : 'Join Game'}
+                {isJoining ? 'Infiltrating...' : 'Join Game'}
               </button>
             </div>
           </div>
         </div>
 
         {/* How to Play */}
-        <div className="bg-white rounded-3xl p-6 shadow-xl border-2 border-gray-900">
-          <h2 className="text-2xl font-black text-black mb-6">📖 How to Play</h2>
-          <div className="grid md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-green-400 flex items-center justify-center text-white font-black mx-auto mb-2">1</div>
-              <p className="font-bold text-black">30-second match</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-green-400 flex items-center justify-center text-white font-black mx-auto mb-2">2</div>
-              <p className="font-bold text-black">Most apples wins</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-green-400 flex items-center justify-center text-white font-black mx-auto mb-2">3</div>
-              <p className="font-bold text-black">Collision = loss</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-green-400 flex items-center justify-center text-white font-black mx-auto mb-2">4</div>
-              <p className="font-bold text-black">Draws return stake</p>
-            </div>
+        <div className="card bg-black/40 border-gray-800">
+          <h2 className="text-lg font-bold mb-6 text-center uppercase tracking-widest text-gray-500">Mission Directives</h2>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { num: '01', text: '30s Time Limit', icon: '⏱️' },
+              { num: '02', text: 'Collect Data', icon: '🍎' },
+              { num: '03', text: 'Avoid Crashes', icon: '💥' },
+              { num: '04', text: 'Winner Takes Pot', icon: '💰' },
+            ].map((item) => (
+              <div key={item.num} className="text-center group">
+                <div className="w-16 h-16 mx-auto mb-4 relative">
+                    <div className="absolute inset-0 bg-neon-green/20 rounded-full blur-xl group-hover:bg-neon-green/40 transition-colors"></div>
+                    <div className="relative w-full h-full rounded-full border border-neon-green/30 bg-black flex items-center justify-center text-2xl">
+                        {item.icon}
+                    </div>
+                    <div className="absolute -top-2 -right-2 bg-neon-green text-black text-[10px] font-bold px-2 py-1 rounded">
+                        {item.num}
+                    </div>
+                </div>
+                <p className="font-mono text-sm text-gray-400 group-hover:text-white transition-colors">{item.text}</p>
+              </div>
+            ))}
           </div>
+        </div>
+
+        {/* Connection Status */}
+        <div className="mt-8 flex items-center justify-center gap-3 opacity-50 hover:opacity-100 transition-opacity">
+          <span className="status-dot status-dot-green"></span>
+          <span className="text-neon-green font-mono text-xs uppercase tracking-widest">System Online: Movement Bardock</span>
         </div>
       </div>
 
