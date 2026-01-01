@@ -57,10 +57,7 @@ export default function StakeModal({ onConfirm, onCancel }: StakeModalProps) {
     <div className="modal-overlay">
       <div className="modal-content relative overflow-hidden">
         {/* Decorative Grid Background */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
-            backgroundImage: 'linear-gradient(rgba(0, 255, 157, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 157, 0.1) 1px, transparent 1px)',
-            backgroundSize: '20px 20px'
-        }}></div>
+        <div className="absolute inset-0 opacity-10 pointer-events-none"></div>
 
         {/* Header */}
         <div className="relative z-10 flex items-center justify-between mb-8 border-b border-gray-800 pb-4">

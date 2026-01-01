@@ -57,7 +57,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-16 relative">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-green-500/20 blur-[100px] rounded-full pointer-events-none"></div>
-          <h1 className="text-5xl md:text-7xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500 font-arcade drop-shadow-[0_0_15px_rgba(74,222,128,0.5)]">
+          <h1 className="text-5xl md:text-7xl font-black mb-4 text-green-400 font-arcade drop-shadow-[0_0_15px_rgba(74,222,128,0.5)]">
             Slither<br/>Money
           </h1>
           <p className="text-xl text-blue-300 font-mono tracking-widest uppercase border-y border-blue-500/30 py-2 inline-block">

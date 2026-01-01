@@ -26,9 +26,6 @@ body {
   background-color: var(--bg-dark);
   font-family: var(--font-share-tech), monospace;
   color: var(--text-main);
-  background-image: 
-    linear-gradient(rgba(0, 255, 157, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 157, 0.03) 1px, transparent 1px);
   background-size: 40px 40px;
   background-position: center top;
   min-height: 100vh;
@@ -43,7 +40,7 @@ h1, h2, h3, .font-arcade {
 
 /* Gradient Background Utility - Overriding the old one */
 .bg-gradient-main {
-  background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0a0a12 100%);
+  background: var(--bg-dark);
 }
 
 /* Cards */
@@ -66,7 +63,7 @@ h1, h2, h3, .font-arcade {
   left: 0;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, var(--neon-pink), var(--neon-blue), var(--neon-green));
+  background: var(--neon-blue);
 }
 
 .card-dark {
@@ -104,7 +101,7 @@ h1, h2, h3, .font-arcade {
 }
 
 .btn-primary {
-  background: linear-gradient(90deg, var(--neon-green), #00cc7d);
+  background: var(--neon-green);
   color: #000;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
@@ -115,7 +112,7 @@ h1, h2, h3, .font-arcade {
 }
 
 .btn-secondary {
-  background: linear-gradient(90deg, var(--neon-blue), #00a0cc);
+  background: var(--neon-blue);
   color: #000;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
@@ -139,7 +136,7 @@ h1, h2, h3, .font-arcade {
 }
 
 .btn-danger {
-  background: linear-gradient(90deg, #ff4f4f, #cc0000);
+  background: #ff4f4f;
   color: white;
 }
 

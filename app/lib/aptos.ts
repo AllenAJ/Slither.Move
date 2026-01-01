@@ -12,7 +12,7 @@ export const MOVEMENT_CONFIGS = {
     chainId: 250,
     name: "Movement Testnet",
     fullnode: "https://testnet.movementnetwork.xyz/v1",
-    explorer: "testnet"
+    explorer: "bardock+testnet"
   }
 };
 
