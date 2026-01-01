@@ -1,29 +1,29 @@
-# SlitherMoney 🐍💰
+# SLITHER.MOVE
 
-A real-time multiplayer snake game built on the Movement Network where players stake MOVE tokens to compete in 30-second battles.
+A high-stakes, real-time multiplayer snake game built on the Movement Network. Players stake MOVE tokens to compete in 30-second battles where the winner takes the entire pot.
 
-## Features
+## Core Features
 
-- 🎮 **Real-time Multiplayer** - WebSocket-powered snake battles
-- 💰 **Stake-based Gaming** - Bet MOVE tokens, winner takes all
-- 🔐 **Trustless Escrow** - Smart contract handles all payouts
-- 🌐 **Multiple Wallet Support** - Privy social login or native Aptos wallets
-- ⚡ **Fast Gameplay** - 30-second matches with instant results
+- **Real-time Multiplayer**: Low-latency snake battles powered by WebSockets.
+- **Stake-based Competition**: Competitive matchmaking where players wager MOVE tokens.
+- **Trustless Escrow**: Smart contract-managed payouts ensuring security and transparency.
+- **Hybrid Wallet Integration**: Support for both social logins via Privy and native Aptos/Movement wallets.
+- **High-performance Gameplay**: Optimized 30-second matches designed for quick engagement.
 
 ## Tech Stack
 
-- **Frontend**: Next.js 16 + React + Tailwind CSS
-- **Blockchain**: Movement Network (Aptos-based)
-- **Smart Contracts**: Move language
-- **Wallet Integration**: Privy + Aptos Wallet Adapter
-- **Real-time**: WebSocket (Socket.io)
+- **Frontend**: Next.js 16, React 19, Tailwind CSS
+- **Blockchain**: Movement Network (Bardock Testnet)
+- **Smart Contracts**: Move Language
+- **Wallet Infrastructure**: Privy, Aptos Wallet Adapter
+- **Backend/Real-time**: Node.js, WebSocket (Socket.io)
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+ and npm
-- Movement CLI (for contract deployment)
+- Movement CLI (for contract interaction/deployment)
 
 ### Installation
 
@@ -43,105 +43,86 @@ npm install
 cp .env.example .env.local
 ```
 
-Edit `.env.local` and add your Privy App ID:
+Edit `.env.local` to include your configuration:
 ```
 NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id_here
 NEXT_PUBLIC_WS_URL=ws://localhost:3001
 ```
 
-4. Start the development servers:
+4. Start the development environment:
 ```bash
+chmod +x start-all.sh
 ./start-all.sh
 ```
 
-This will start:
-- WebSocket server on port 3001
-- Next.js app on port 3000
+This command initializes:
+- WebSocket server (Port 3001)
+- Next.js application (Port 3000)
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser
+## Smart Contract Architecture
 
-## Smart Contract
+The application utilizes a Move smart contract deployed on the Movement Bardock Testnet.
 
-The game uses a Move smart contract deployed on Movement Testnet (Bardock).
+**Contract Address**: `0xf2fa21daeb741e9ea472603a1f4f0e189c3b9b0907a52128bc4e4218aaddb04b`
 
-Contract address: `0xf2fa21daeb741e9ea472603a1f4f0e189c3b9b0907a52128bc4e4218aaddb04b`
+### Primary Entry Functions
 
-### Contract Functions
+- `create_game(stake_amount)`: Initializes a new game lobby and locks the host's stake.
+- `join_game(game_creator)`: Allows a challenger to join and match the stake.
+- `submit_result(game_creator, score, won)`: Submits the verified game outcome.
+- `claim_winnings(game_creator)`: Facilitates the trustless transfer of the pot to the winner.
 
-- `create_game(stake_amount)` - Create a new game with stake
-- `join_game(game_creator)` - Join an existing game
-- `submit_result(game_creator, score)` - Submit game results
-- `claim_winnings(game_creator)` - Claim winnings after winning
+## Gameplay Mechanics
 
-## How to Play
-
-1. **Connect Wallet** - Use Privy social login or Aptos wallet
-2. **Create or Join Game** - Set your stake amount or join an opponent
-3. **Play Snake** - Collect apples in a 30-second battle
-4. **Claim Winnings** - Winner claims the full pot from the smart contract
+1. **Authentication**: Connect via social account (Privy) or native wallet.
+2. **Lobby Management**: Host a new session with a custom stake or join an existing challenger.
+3. **The Arena**: Navigate the arena to collect apples while avoiding collisions and the opponent.
+4. **Settlement**: The winner claims the aggregated stake directly from the smart contract.
 
 ### Game Rules
-
-- 30-second matches
-- Most apples collected wins
-- Collision with walls or self = instant loss
-- Draws return stakes to both players
-- Single-player fallback if no opponent joins
+- 30-second time limit per match.
+- Most apples collected determines the winner.
+- Collisions with walls or the player's own body result in an immediate loss.
+- In the event of a draw, stakes are returned to both participants.
 
 ## Project Structure
 
 ```
 ├── app/
-│   ├── components/     # React components
-│   ├── lib/           # Game engine & blockchain transactions
-│   ├── hooks/         # Custom React hooks
-│   └── page.tsx       # Main app page
-├── server/            # WebSocket server
-├── modules/           # Move smart contracts
-│   └── sources/       # Contract source files
-└── start-all.sh       # Start script
+│   ├── components/     # UI and Game components
+│   ├── lib/           # Game engine and Move transaction logic
+│   ├── hooks/         # Custom React hooks for WebSockets
+│   └── page.tsx       # Main application entry point
+├── server/            # WebSocket synchronization server
+├── modules/           # Move smart contracts (sources and build files)
+└── start-all.sh       # Unified startup script
 ```
 
-## Development
+## Development and Deployment
 
-### Running Tests
-
+### Local Development
 ```bash
-npm test
+npm run dev
 ```
 
-### Building for Production
-
+### Production Build
 ```bash
 npm run build
 npm start
 ```
 
-### Deploying Smart Contracts
-
+### Smart Contract Deployment
 ```bash
 cd modules
 movement move publish --named-addresses slither=default,counter=default --assume-yes
 ```
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-MIT License - see LICENSE file for details
-
 ## Acknowledgments
 
-- Built for the Movement Network Hackathon
-- Powered by Movement Network and Aptos
-- Wallet integration by Privy
-
-## Support
-
-For issues and questions, please open an issue on GitHub.
+- Developed for the Movement Network Hackathon.
+- Infrastructure provided by Movement Labs and Aptos.
+- Authentication powered by Privy.
 
 ---
 
-Built with ❤️ for the Movement Network Hackathon
+Developed for the Movement Network Hackathon.
