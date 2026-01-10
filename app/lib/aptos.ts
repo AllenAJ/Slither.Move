@@ -28,7 +28,7 @@ export const aptos = new Aptos(
 );
 
 // Contract address
-export const CONTRACT_ADDRESS = '0x88d5bf2a5368c3cf3283e952e70e510cb8ce6318cfd587f1164e549827c87596';
+export const CONTRACT_ADDRESS = '0xf2fa21daeb741e9ea472603a1f4f0e189c3b9b0907a52128bc4e4218aaddb04b';
 
 // Utility to convert Uint8Array to hex string
 export const toHex = (buffer: Uint8Array): string => {
